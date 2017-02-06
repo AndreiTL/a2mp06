@@ -1,0 +1,42 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.rootcontainer {
+  height: 100%;
+  width: 100%;
+}
+
+.maincontent {
+  min-height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  padding-bottom: 80px;
+}
+.mainfooter {
+  margin: -80px 0 0;
+  height: 80px;
+  width: 100%;
+}
+
+.appcontainer {
+  margin: 5px auto;
+  max-width: 800px;
+  //height: 100%;
+}
+
+.weatherbox {
+  min-height: 400px;
+  width: 400px;
+  padding: 2px;
+  box-sizing: border-box;
+  //float: left;
+}
+
+.googlemapbox {
+  width: 400px;
+  //float: left;
+  padding: 0;
+}

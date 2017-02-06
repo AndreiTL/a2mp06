@@ -1,0 +1,63 @@
+
+.townstable {
+
+}
+.pos-relative {
+  position: relative;
+}
+.favorite-pane {
+  height: 30px;
+  position: relative;
+  width: 100%;
+}
+.favorite-button-right {
+  float: right;
+  padding: 2px;
+  border: 1px solid red;
+  border-radius: 3px;
+  background-color: lavender;
+}
+
+.weather-line-title {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+}
+
+.tablerow {
+  width: 100%;
+  padding: 1px;
+}
+
+ul {
+  margin: 0;
+  list-style: none;
+  padding: 1px;
+}
+
+.rowelement {
+  width: 100%;
+  padding: 2px;
+  margin: 0.5rem 0;
+  border: 1px solid blue;
+  box-sizing: border-box;
+  background-color: aliceblue;
+  border-radius: 8px;
+}
+.rowelement:hover {
+  background-color: aqua;
+}
+
+.townname {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.weather-icon {
+  height: 30px;
+  width: 30px;
+}
+
+.inlineblock {
+  display: inline-block;
+  vertical-align: middle;
+}
