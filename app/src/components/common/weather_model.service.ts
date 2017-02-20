@@ -1,6 +1,9 @@
 import {Injectable} from '@angular/core';
 import {StorageService} from './storage.service';
 import {RestService} from './rest.service';
+import {BehaviorSubject} from 'rxjs'
+import IWeather = Weather.IWeather;
+import IMainWeather = Weather.IMainWeather;
 
 @Injectable()
 export class WeatherModelService {
@@ -22,58 +25,80 @@ export class WeatherModelService {
 
   lastUpdateTime: number;
 
+  private behaviorSubjectWeather: BehaviorSubject<Weather.IWeatherObject>;
+  private behaviorSubjectUpdateTime: BehaviorSubject<number>;
+
   constructor(private storageService: StorageService,
           private restService: RestService
   ) {
     this.callFunctionsArray = [];
+    this.behaviorSubjectWeather = new BehaviorSubject(<Weather.IWeatherObject>{});
+    this.behaviorSubjectUpdateTime = new BehaviorSubject(0);
+
+    let locStorLastUpdateTime: number = parseInt(this.storageService.getData('lastUpdateTime'), 10);
+    if (locStorLastUpdateTime) {
+      this.behaviorSubjectUpdateTime.next(locStorLastUpdateTime);
+    }
   }
 
-  setWeatherParams(options: Weather.IWeatherParams) {
+  // setWeatherParams(options: Weather.IWeatherParams) {
+  //   this.longitude = options.longitude;
+  //   this.latitude = options.latitude;
+  //   this.count = options.count;
+  // }
+
+  getRxWeatherObject(): BehaviorSubject<Weather.IWeatherObject> {
+    return this.behaviorSubjectWeather;
+  }
+
+  loadWeatherInCircle(options: Weather.IWeatherParams): void {
+    // Todo: apply 'options' to current weaher download
     this.longitude = options.longitude;
     this.latitude = options.latitude;
     this.count = options.count;
+
+
+    let lastUpdateTimeString: string = this.storageService.getData('lastUpdateTime');
+    if (!lastUpdateTimeString) {
+      // case: first load
+      console.log('Nothing in storage. Load from internet.');
+      this.initLoadInCircle(this.behaviorSubjectWeather);
+    } else {
+      // in milliseconds
+      this.lastUpdateTime = parseInt(lastUpdateTimeString, 10);
+      let paramsString: string = this.storageService.getData('params');
+      let params: Weather.IWeatherParams = <Weather.IWeatherParams> JSON.parse(paramsString);
+      if ((this.lastUpdateTime > (Date.now() - this.maxTimeValide)) &&
+        params.latitude === this.latitude &&
+        params.longitude === this.longitude &&
+        params.count === this.count
+      ) {
+        // case: in storage are valid data then load from storage
+        console.log('Valid in storage. Load from storage.');
+        let weatherString = this.storageService.getData('weather');
+        this.weatherObject = <Weather.IWeatherObject> JSON.parse(weatherString);
+        this.behaviorSubjectWeather.next(this.weatherObject)
+      } else {
+        // case: in storage are expired data then load from internet
+        console.log('Expired or invalid in storage. Load from internet.');
+        // this.initLoadInCircle(resolve, reject);
+        this.initLoadInCircle(this.behaviorSubjectWeather);
+      }
+    }
+
   }
 
-  getWeatherInCircle(): Promise<Weather.IWeatherObject> {
-    return new Promise((resolve, reject): void => {
-      let lastUpdateTimeString: string = this.storageService.getData('lastUpdateTime');
-      if (!lastUpdateTimeString) {
-        // case: first load
-        console.log('Nothing in storage. Load from internet.');
-        this.initLoadInCircle(resolve, reject);
-      } else {
-        // in milliseconds
-        this.lastUpdateTime = parseInt(lastUpdateTimeString, 10);
-        let paramsString: string = this.storageService.getData('params');
-        let params: Weather.IWeatherParams = <Weather.IWeatherParams> JSON.parse(paramsString);
-        if ((this.lastUpdateTime > (Date.now() - this.maxTimeValide)) &&
-            params.latitude === this.latitude &&
-            params.longitude === this.longitude &&
-            params.count === this.count
-          ) {
-            // case: in storage are valid data then load from storage
-            console.log('Valid in storage. Load from storage.');
-            let weatherString = this.storageService.getData('weather');
-            this.weatherObject = <Weather.IWeatherObject> JSON.parse(weatherString);
-            // call for model update
-            this.callFunctionsInArray();
-            resolve(this.weatherObject);
-        } else {
-          // case: in storage are expired data then load from internet
-          console.log('Expired or invalid in storage. Load from internet.');
-          this.initLoadInCircle(resolve, reject);
-        }
-      }
-    });
+  getRxLastUpdateTime(): BehaviorSubject<number> {
+    return this.behaviorSubjectUpdateTime;
   }
 
   getLastUpdateTime(): number {
     return parseInt(this.storageService.getData('lastUpdateTime'), 10);
   }
 
-  getTownsWeather(): Weather.ITownWeather[] {
-    return this.weatherObject.list;
-  }
+  // getTownsWeather(): Weather.ITownWeather[] {
+  //   return this.weatherObject.list;
+  // }
 
   loadWeatherByIds(ids: number[]): Promise<Weather.IWeatherObject> {
     return new Promise((resolve, reject): void => {
@@ -104,10 +129,15 @@ export class WeatherModelService {
     });
   }
 
-  private initLoadInCircle(resolve: Function, reject: Function) {
-    this.loadWeatherInCircle().then((weatherObj: Weather.IWeatherObject) => {
+  private initLoadInCircle(subject: BehaviorSubject<Weather.IWeatherObject>) {
+    let weather: Weather.IWeatherObject;
+    let urlTemplate = `http://api.openweathermap.org/data/2.5/find?lat=` +
+      `${this.latitude}&lon=${this.longitude}&cnt=${this.count}&appid=${this.API}`;
+    this.restService.sendRequest(this.typeRequest, urlTemplate, this.async, '').then(
+      (responseText: string) => {
+        weather = <Weather.IWeatherObject> JSON.parse(responseText);
         this.lastUpdateTime = Date.now();
-        this.weatherObject = weatherObj;
+        this.weatherObject = weather;
         this.storageService.setData('lastUpdateTime', JSON.stringify(this.lastUpdateTime));
         this.storageService.setData('weather', JSON.stringify(this.weatherObject));
         this.storageService.setData('params', JSON.stringify({
@@ -115,34 +145,11 @@ export class WeatherModelService {
           latitude: this.latitude,
           count: this.count})
         );
-        // call for model update
-        this.callFunctionsInArray();
-        resolve(this.weatherObject);
+        subject.next(this.weatherObject);
       },
       () => {
-        reject();
+        subject.error('Cann;t load data from server');
       });
-  }
-
-  private loadWeatherInCircle(): Promise<Weather.IWeatherObject> {
-    return new Promise((resolve, reject): void => {
-      let weather: Weather.IWeatherObject;
-
-      let urlTemplate = `http://api.openweathermap.org/data/2.5/find?lat=` +
-        `${this.latitude}&lon=${this.longitude}&cnt=${this.count}&appid=${this.API}`;
-
-      this.restService.sendRequest(this.typeRequest, urlTemplate, this.async, '').then(
-        (responseText: string) => {
-          weather = <Weather.IWeatherObject> JSON.parse(responseText);
-          resolve(weather);
-        },
-        () => {
-          console.log('Cann\'t load data from weather portal!');
-          alert('Cann\'t load data from weather portal!');
-          reject();
-        }
-      );
-    });
   }
 
   // to deliver changes to other components

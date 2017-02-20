@@ -3,6 +3,7 @@ import {template} from './weather.tpl';
 
 import {WeatherModelService} from '../common/weather_model.service';
 import {WeatherFavoriteModelService} from '../common/weather_favorite_model.service';
+import {Observable, Observer} from "rxjs";
 
 @Component({
   selector: 'weather',
@@ -11,6 +12,10 @@ import {WeatherFavoriteModelService} from '../common/weather_favorite_model.serv
 export class WeatherComponent {
   @Input() location: ILocation.ICoordinates;
   @Input() amounttowns: string;
+
+  weatherSource: Observable<Weather.IWeatherObject>;
+
+  weatherObserver: () => Observer<Weather.IWeatherObject>;
 
   weatherObject: Weather.IWeatherObject;
 
@@ -29,27 +34,54 @@ export class WeatherComponent {
     console.log('WeatherComponent init.');
     this.townsTable = [];
     this.favoriteTownsTable = this.weatherFavoriteModelService.getFavoriteTownsWeather();
+
+    this.weatherSource = this.weatherModelService.getRxWeatherObject();
+
+    this.weatherObserver = () => {return {
+      next: value => {
+        console.log('next weather');
+        console.dir(value);
+        this.trigLoad = true;
+        this.weatherObject = value;
+        this.townsTable = this.weatherObject.list;
+        this.cd.detectChanges();
+      },
+      error: err => {
+        console.log('err weather');
+        console.dir(err);
+      },
+      complete: () => {
+        console.log('comlete thread weather');
+      }
+    }};
+
+    this.weatherSource.subscribe(this.weatherObserver());
   }
 
   ngAfterContentInit() {
-    this.weatherModelService.setWeatherParams({
-      latitude: this.location.latitude,
-      longitude: this.location.longitude,
-      count: parseInt(this.amounttowns, 10)
-    });
-    this.weatherModelService.getWeatherInCircle().then(
-      (weatherObj: Weather.IWeatherObject) => {
-        this.weatherObject = weatherObj;
-        this.townsTable = this.weatherObject.list;
-      },
-      () => {
-        console.log('Cann\'t update table list! Input parameter is empty!');
-        alert('Cann\'t update table list! Input parameter is empty!');
-      }
-    ).then( () => {
-      this.updateTableList();
-    });
+    // this.weatherModelService.setWeatherParams({
+    //   latitude: this.location.latitude,
+    //   longitude: this.location.longitude,
+    //   count: parseInt(this.amounttowns, 10)
+    // });
+    // this.weatherModelService.getWeatherInCircle().then(
+    //   (weatherObj: Weather.IWeatherObject) => {
+    //     this.weatherObject = weatherObj;
+    //     this.townsTable = this.weatherObject.list;
+    //   },
+    //   () => {
+    //     console.log('Cann\'t update table list! Input parameter is empty!');
+    //     alert('Cann\'t update table list! Input parameter is empty!');
+    //   }
+    // ).then( () => {
+    //   this.updateTableList();
+    // });
     // this.favoriteTownsTable = this.weatherModelService.getFavoriteTownsWeather();
+    this.weatherModelService.loadWeatherInCircle({
+        latitude: this.location.latitude,
+        longitude: this.location.longitude,
+        count: parseInt(this.amounttowns, 10)
+      });
   }
 
   addTownFavoriteById(idString: string) {

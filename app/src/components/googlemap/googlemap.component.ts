@@ -75,7 +75,7 @@ export class GooglemapComponent {
   }
 
   updateView(): void {
-    this.markerArray = this.markersService.processMarkers(this.weatherModelService.getTownsWeather());
+    // this.markerArray = this.markersService.processMarkers(this.weatherModelService.getTownsWeather());
     if (!this.inLoading) {
       this.setMarkers(this.markerArray);
     } // else do nothing
