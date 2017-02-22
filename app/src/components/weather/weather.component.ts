@@ -13,14 +13,14 @@ export class WeatherComponent {
   @Input() location: ILocation.ICoordinates;
   @Input() amounttowns: string;
 
-  weatherSource: Observable<Weather.IWeatherObject>;
+  townsWeatherSource: Observable<Weather.ITownWeather[]>;
 
-  weatherObserver: () => Observer<Weather.IWeatherObject>;
+  townsWeatherObserver: () => Observer<Weather.ITownWeather[]>;
 
   weatherObject: Weather.IWeatherObject;
 
-  trigLoad: boolean = false;
-  trigLoadFavorite: boolean = false;
+  isLoading: boolean = true;
+  isLoadingFavorite: boolean = true;
   townsTable: Weather.ITownWeather[] ;
   favoriteTownsTable: Weather.ITownWeather[];
 
@@ -35,27 +35,28 @@ export class WeatherComponent {
     this.townsTable = [];
     this.favoriteTownsTable = this.weatherFavoriteModelService.getFavoriteTownsWeather();
 
-    this.weatherSource = this.weatherModelService.getRxWeatherObject();
+    this.townsWeatherSource = this.weatherModelService.getRxTownsWeather();
 
-    this.weatherObserver = () => {return {
+    this.townsWeatherObserver = () => {return {
       next: value => {
         console.log('next weather');
         console.dir(value);
-        this.trigLoad = true;
-        this.weatherObject = value;
-        this.townsTable = this.weatherObject.list;
+        this.isLoading = false;
+        this.townsTable = value;
         this.cd.detectChanges();
       },
       error: err => {
+        this.isLoading = false;
         console.log('err weather');
         console.dir(err);
       },
       complete: () => {
+        this.isLoading = false;
         console.log('comlete thread weather');
       }
     }};
 
-    this.weatherSource.subscribe(this.weatherObserver());
+    this.townsWeatherSource.subscribe(this.townsWeatherObserver());
   }
 
   ngAfterContentInit() {
@@ -77,6 +78,7 @@ export class WeatherComponent {
     //   this.updateTableList();
     // });
     // this.favoriteTownsTable = this.weatherModelService.getFavoriteTownsWeather();
+    this.isLoading = true;
     this.weatherModelService.loadWeatherInCircle({
         latitude: this.location.latitude,
         longitude: this.location.longitude,
@@ -84,24 +86,42 @@ export class WeatherComponent {
       });
   }
 
+  addTownById(idString: string) {
+    this.isLoading = true;
+    try {
+      let id: number = parseInt(idString, 10);
+      this.weatherModelService.addTownById(id);
+    } catch (e) {
+      this.isLoading = false;
+      console.log((<Error>e).message);
+      alert((<Error>e).message);
+    }
+  }
+
+  removeTown(id: number) {
+    console.log(id);
+    this.weatherModelService.removeTown(id);
+  }
+
+
   addTownFavoriteById(idString: string) {
-    this.trigLoadFavorite = true;
+    this.isLoadingFavorite = true;
     try {
       let id: number = parseInt(idString, 10);
       this.weatherFavoriteModelService.addToFavoriteById(id).then(
         (weather: Weather.IWeatherObject) => {
           this.favoriteTownsTable = weather.list;
-          this.trigLoadFavorite = false;
+          this.isLoadingFavorite = false;
         },
         () => {
-          this.trigLoadFavorite = false;
+          this.isLoadingFavorite = false;
           console.log(" Cann't reload weather for favorite towns. ");
           alert(" Cann't reload weather for favorite towns. ");
         }
       );
       this.newTownId = '';
     } catch (e) {
-      this.trigLoadFavorite = false;
+      this.isLoadingFavorite = false;
       console.log((<Error>e).message);
       alert((<Error>e).message);
     }
@@ -125,15 +145,15 @@ export class WeatherComponent {
   }
 
   reloadFavoritesTownsWeather(): void {
-    this.trigLoadFavorite = true;
+    this.isLoadingFavorite = true;
     this.weatherFavoriteModelService.reloadFavoriteTownsWeather().then(
       (weather: Weather.IWeatherObject) => {
         this.favoriteTownsTable = weather.list;
-        this.trigLoadFavorite = false;
+        this.isLoadingFavorite = false;
         console.log(' Favorites towns weather was updated.');
       },
       () => {
-        this.trigLoadFavorite = false;
+        this.isLoadingFavorite = false;
         console.log(" Cann't reload weather for favorite towns. ");
         alert(" Cann't reload weather for favorite towns. ");
       }
@@ -141,7 +161,7 @@ export class WeatherComponent {
   }
 
   private updateTableList() {
-    this.trigLoad = true;
+    this.isLoading = false;
     this.cd.detectChanges();
   }
 }
