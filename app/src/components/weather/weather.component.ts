@@ -60,24 +60,6 @@ export class WeatherComponent {
   }
 
   ngAfterContentInit() {
-    // this.weatherModelService.setWeatherParams({
-    //   latitude: this.location.latitude,
-    //   longitude: this.location.longitude,
-    //   count: parseInt(this.amounttowns, 10)
-    // });
-    // this.weatherModelService.getWeatherInCircle().then(
-    //   (weatherObj: Weather.IWeatherObject) => {
-    //     this.weatherObject = weatherObj;
-    //     this.townsTable = this.weatherObject.list;
-    //   },
-    //   () => {
-    //     console.log('Cann\'t update table list! Input parameter is empty!');
-    //     alert('Cann\'t update table list! Input parameter is empty!');
-    //   }
-    // ).then( () => {
-    //   this.updateTableList();
-    // });
-    // this.favoriteTownsTable = this.weatherModelService.getFavoriteTownsWeather();
     this.isLoading = true;
     this.weatherModelService.loadWeatherInCircle({
         latitude: this.location.latitude,

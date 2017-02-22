@@ -1,9 +1,12 @@
-import {Component, Input} from '@angular/core';
-import {template} from './googlemap.tpl';
+import {Component, Input, ChangeDetectorRef} from '@angular/core';
+
+import {Observable, Observer} from "rxjs";
 
 import {GoogleMapLoaderService} from '../common/google_maps_loader.service';
 import {WeatherModelService} from '../common/weather_model.service';
 import {MarkersService} from '../common/markers.service';
+
+import {template} from './googlemap.tpl';
 
 @Component({
   selector: 'googlemap',
@@ -16,19 +19,52 @@ export class GooglemapComponent {
 
   key: string = 'AIzaSyDdauxpzXTyktNa8x97awm9_3X-3pycINA';
 
+  townsTable: Weather.ITownWeather[] ;
+
+  townsWeatherSource: Observable<Weather.ITownWeather[]>;
+  townsWeatherObserver: () => Observer<Weather.ITownWeather[]>;
+
+
   googleMapObj: google.maps.Map;
   inLoading: boolean;
   markerArray: NGoogleMapService.IMarkerPoint[];
+  markerArrayDetach: any[];
 
   constructor(private googleMapLoaderService: GoogleMapLoaderService,
-              // private zone: NgZone,
+              private cd: ChangeDetectorRef,
               private weatherModelService: WeatherModelService,
               private markersService: MarkersService
   ) {
     console.log('GooglemapComponent init.');
     this.inLoading = true;
+    this.markerArrayDetach = [];
+
     this.markerArray = [];
-    weatherModelService.addListener(this.updateView.bind(this));
+    this.townsTable = [];
+
+    this.townsWeatherSource = this.weatherModelService.getRxTownsWeather();
+
+    this.townsWeatherObserver = () => {return {
+      next: value => {
+        console.log('next googlemp');
+        console.dir(value);
+        this.townsTable = value;
+        this.markerArray = this.markersService.processMarkers(this.townsTable);
+        if (!this.inLoading) {
+          this.updateMarkers();
+        }
+        this.cd.detectChanges();
+      },
+      error: err => {
+        console.log('err googlemp');
+        console.dir(err);
+      },
+      complete: () => {
+        console.log('comlete thread googlemp');
+      }
+    }};
+    this.townsWeatherSource.subscribe(this.townsWeatherObserver());
+
   }
 
   ngAfterContentInit() {
@@ -46,14 +82,28 @@ export class GooglemapComponent {
     this.googleMapObj.setOptions(mapOptions);
   }
 
+  updateMarkers() {
+    this.deleteMarkers();
+    this.setMarkers(this.markerArray);
+  }
+
+  deleteMarkers() {
+    this.markerArrayDetach.forEach((value)=>{
+      value.setMap(null);
+    });
+    this.markerArrayDetach = [];
+  }
+
   setMarkers(markerSetArray: NGoogleMapService.IMarkerPoint[]) {
     this.markerArray = markerSetArray;
     markerSetArray.forEach((value: NGoogleMapService.IMarkerPoint) => {
-      new google.maps.Marker({
-        position: {lat: value.lat, lng: value.lng},
-        map: this.googleMapObj,
-        title: value.text
-      });
+      this.markerArrayDetach.push(
+        new google.maps.Marker({
+          position: {lat: value.lat, lng: value.lng},
+          map: this.googleMapObj,
+          title: value.text
+        })
+      );
     });
   }
 
@@ -66,7 +116,7 @@ export class GooglemapComponent {
       });
       this.inLoading = false;
       if (this.markerArray.length > 0) {
-        this.setMarkers(this.markerArray);
+        this.updateMarkers();
       }
     }).catch((err: Object) => {
       console.error(err);
@@ -74,10 +124,4 @@ export class GooglemapComponent {
     });
   }
 
-  updateView(): void {
-    // this.markerArray = this.markersService.processMarkers(this.weatherModelService.getTownsWeather());
-    if (!this.inLoading) {
-      this.setMarkers(this.markerArray);
-    } // else do nothing
-  }
 }
