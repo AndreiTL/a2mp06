@@ -26,8 +26,12 @@ export class GooglemapComponent {
   markerArray: NGoogleMapService.IMarkerPoint[];
   markerArrayDetach: any[];
 
-  currentPositionSource: Subject<google.maps.LatLng>;
-  currentPosition$: Observable<google.maps.LatLng>;
+  // currentPositionSource: Subject<ILocation.ISimpleCoordinate>;
+  // currentPosition$: Observable<ILocation.ISimpleCoordinate>;
+  googlemapCoordinates: ILocation.ISimpleCoordinate;
+  googlemapPositionSource: Observable<ILocation.ISimpleCoordinate>;
+  googleMapPositionObserver: () => Observer<ILocation.ISimpleCoordinate>;
+
 
   constructor(
               private cd: ChangeDetectorRef,
@@ -42,10 +46,11 @@ export class GooglemapComponent {
     this.townsTable = [];
 
     this.townsWeatherSource = this.weatherModelService.getRxTownsWeather();
-
+    this.googlemapPositionSource = this.googleMapModelService.getRxCurrentPosition();
     // map current position stream and listener
-    this.currentPositionSource = new Subject<google.maps.LatLng>();
-    this.currentPosition$ = this.currentPositionSource.asObservable();
+    // this.currentPositionSource = new Subject<google.maps.LatLng>();
+    // this.currentPositionSource = this.googleMapModelService.getRxCurrentPosition();
+    // this.currentPosition$ = this.currentPositionSource.asObservable();
 
     // get towns weather
     this.townsWeatherObserver = () => {return {
@@ -66,6 +71,24 @@ export class GooglemapComponent {
       }
     }};
     this.townsWeatherSource.subscribe(this.townsWeatherObserver());
+
+    this.googleMapPositionObserver = () => {return {
+      next: value => {
+        console.log('next position of googlemap');
+        console.dir(value);
+        this.googlemapCoordinates = value;
+        this.cd.detectChanges();
+      },
+      error: err => {
+        console.log('err position of googlemap');
+        console.dir(err);
+      },
+      complete: () => {
+        console.log('comlete thread position of googlemap');
+      }
+    }};
+    this.googlemapPositionSource.subscribe(this.googleMapPositionObserver);
+
   }
 
   ngAfterContentInit() {

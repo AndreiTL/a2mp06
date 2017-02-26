@@ -11,20 +11,7 @@ export const template = `
               <weather [amounttowns]="amountTowns" [location]="coordinates"></weather>
           </div>
           <div class="googlemapbox">
-              <googlemap [zoom]="zoom" [location]="coordinates"></googlemap>
-              <div>
-                  <div>
-                    <span>Current position:</span>                  
-                  </div>
-                  <div>
-                    <span>Latitude:</span>
-                    <span>{{googlemapCoordinates?.lat}}</span>
-                  </div>
-                  <div>
-                    <span>Longitude:</span>
-                    <span>{{googlemapCoordinates?.lng}}</span>
-                  </div>
-              </div>
+              <googlemap [zoom]="zoom" [location]="coordinates"></googlemap>              
           </div>        
       </div>
     </div>

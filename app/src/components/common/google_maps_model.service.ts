@@ -26,14 +26,14 @@ export class GoogleMapModelService {
 
     // map current position stream and listener
     this.currentPositionSource = new Subject<ILocation.ISimpleCoordinate>();
-    // this.currentPosition$ = this.currentPositionSource.asObservable();
     this.currentPositionSource.next({lat: 0, lng: 0});
+    this.currentPosition$ = this.currentPositionSource.asObservable();
 
   }
 
-  getRxCurrentPosition(): Subject<ILocation.ISimpleCoordinate> {
-    // return this.currentPosition$;
-    return this.currentPositionSource;
+  getRxCurrentPosition(): Observable<ILocation.ISimpleCoordinate> {
+    return this.currentPosition$;
+    // return this.currentPositionSource;
   }
 
   setMapCenterAndZoom(lat: number, lng: number, zoom: number) {
@@ -89,11 +89,11 @@ export class GoogleMapModelService {
       let handleCoordinate = (): void => {
         let latLng: google.maps.LatLng = this.googleMapObj.getCenter();
         this.currentPositionSource.next({lat: latLng.lat(), lng: latLng.lng()});
-        // console.log({lat: latLng.lat(), lng: latLng.lng()})
+        // console.log({lat: latLng.lat(), lng: latLng.lng()});
+        // console.log(this);
       };
-      // listener for current position on the map and pushh it to stream
-      this.googleMapObj.addListener('drag', handleCoordinate.bind(this));
-
+      // listener for current position on the map and push it to stream
+      this.googleMapObj.addListener('drag', handleCoordinate);
     }).catch((err: Object) => {
       console.error(err);
       alert('Cann\'t load google map!');
