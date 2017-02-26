@@ -1,9 +1,8 @@
 import {Injectable} from '@angular/core';
 
-import {Observable, /*Observer,*/ Subject} from "rxjs";
+import {Observable, Subject} from "rxjs";
 
 import {GoogleMapLoaderService} from './google_maps_loader.service';
-// import {MarkersService} from './markers.service';
 
 @Injectable()
 export class GoogleMapModelService {
@@ -20,7 +19,6 @@ export class GoogleMapModelService {
 
   constructor(
     private googleMapLoaderService: GoogleMapLoaderService,
-
   ) {
     this.inLoading = true;
     this.markerArrayDetach = [];
