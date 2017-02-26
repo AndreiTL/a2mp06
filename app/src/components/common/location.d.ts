@@ -11,4 +11,9 @@ declare namespace ILocation {
     longitude: number;
     speed?: number;
   }
+
+  export interface ISimpleCoordinate {
+    lat: number;
+    lng: number;
+  }
 }

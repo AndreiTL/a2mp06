@@ -34,9 +34,9 @@ export class WeatherModelService {
   ) {
     this.townsWeather = [];
     this.callFunctionsArray = [];
-    this.subjectWeather = new Subject();
-    this.subjectTownsWeather = new Subject();
-    this.subjectUpdateTime = new Subject();
+    this.subjectWeather = new Subject<Weather.IWeatherObject>();
+    this.subjectTownsWeather = new Subject<Weather.ITownWeather[]>();
+    this.subjectUpdateTime = new Subject<number>();
 
     let locStorLastUpdateTime: number = parseInt(this.storageService.getData('lastUpdateTime'), 10);
     if (locStorLastUpdateTime) {

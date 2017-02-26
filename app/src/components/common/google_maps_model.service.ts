@@ -14,8 +14,8 @@ export class GoogleMapModelService {
   markerArray: NGoogleMapService.IMarkerPoint[];
   markerArrayDetach: any[];
 
-  currentPositionSource: Subject<google.maps.LatLng>;
-  currentPosition$: Observable<google.maps.LatLng>;
+  currentPositionSource: Subject<ILocation.ISimpleCoordinate>;
+  currentPosition$: Observable<ILocation.ISimpleCoordinate>;
 
   constructor(
     private googleMapLoaderService: GoogleMapLoaderService,
@@ -23,10 +23,17 @@ export class GoogleMapModelService {
     this.inLoading = true;
     this.markerArrayDetach = [];
     this.markerArray = [];
+
+    // map current position stream and listener
+    this.currentPositionSource = new Subject<ILocation.ISimpleCoordinate>();
+    // this.currentPosition$ = this.currentPositionSource.asObservable();
+    this.currentPositionSource.next({lat: 0, lng: 0});
+
   }
 
-  getRxCurrentPosition(): Observable<google.maps.LatLng> {
-    return this.currentPosition$;
+  getRxCurrentPosition(): Subject<ILocation.ISimpleCoordinate> {
+    // return this.currentPosition$;
+    return this.currentPositionSource;
   }
 
   setMapCenterAndZoom(lat: number, lng: number, zoom: number) {
@@ -78,11 +85,15 @@ export class GoogleMapModelService {
       if (this.markerArray.length > 0) {
         this.updateMarkers(this.markerArray);
       }
-      // listener for current position on the map and pushh it to stream
-      this.googleMapObj.addListener('drag', () => {
+      // function listener
+      let handleCoordinate = (): void => {
         let latLng: google.maps.LatLng = this.googleMapObj.getCenter();
-        this.currentPositionSource.next(latLng);
-      });
+        this.currentPositionSource.next({lat: latLng.lat(), lng: latLng.lng()});
+        // console.log({lat: latLng.lat(), lng: latLng.lng()})
+      };
+      // listener for current position on the map and pushh it to stream
+      this.googleMapObj.addListener('drag', handleCoordinate.bind(this));
+
     }).catch((err: Object) => {
       console.error(err);
       alert('Cann\'t load google map!');
