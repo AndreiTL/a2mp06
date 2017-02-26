@@ -12,6 +12,7 @@ import { WeatherComponent } from './components/weather/weather.component';
 import { LoadMaskComponent } from './components/loadmask/loadmask.component';
 
 import {GoogleMapLoaderService} from './components/common/google_maps_loader.service';
+import {GoogleMapModelService} from './components/common/google_maps_model.service';
 import {LocationService} from './components/common/location.service';
 import {StorageService} from './components/common/storage.service';
 import {MarkersService} from './components/common/markers.service';
@@ -51,7 +52,9 @@ import {WeatherIconDirective} from './directives/weather-icon.directive';
     LocationService,
     WeatherModelService,
     WeatherFavoriteModelService,
-    GoogleMapLoaderService],
+    GoogleMapLoaderService,
+    GoogleMapModelService
+  ],
   bootstrap:    [ AppComponent ]
 })
 export class AppModule { }
