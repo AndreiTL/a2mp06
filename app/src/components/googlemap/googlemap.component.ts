@@ -86,4 +86,12 @@ export class GooglemapComponent {
     this.googleMapModelService.initMap(this.location, this.zoom, this.selector);
   }
 
+  addNearestTownWeather(lat: number, lng: number) {
+    this.weatherModelService.addNearestTowns({
+      latitude: lat,
+      longitude: lng,
+      count: 1
+    })
+  }
+
 }

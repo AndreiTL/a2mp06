@@ -12,5 +12,10 @@ export const template = `
       <span>Longitude:</span>
       <span>{{googlemapCoordinates?.lng}}</span>
     </div>
+    <div>
+        <button (click)="addNearestTownWeather(googlemapCoordinates.lat, googlemapCoordinates.lng)">
+            Add nearest town
+        </button>
+    </div>
 </div>
 `;
