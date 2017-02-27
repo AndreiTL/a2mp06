@@ -14,7 +14,7 @@ export class GoogleMapModelService {
   markerArray: NGoogleMapService.IMarkerPoint[];
   markerArrayDetach: any[];
 
-  currentPositionSource: Subject<ILocation.ISimpleCoordinate>;
+  currentPositionSubject: Subject<ILocation.ISimpleCoordinate>;
   currentPosition$: Observable<ILocation.ISimpleCoordinate>;
 
   constructor(
@@ -25,15 +25,15 @@ export class GoogleMapModelService {
     this.markerArray = [];
 
     // map current position stream and listener
-    this.currentPositionSource = new Subject<ILocation.ISimpleCoordinate>();
-    this.currentPositionSource.next({lat: 0, lng: 0});
-    this.currentPosition$ = this.currentPositionSource.asObservable();
+    this.currentPositionSubject = new Subject<ILocation.ISimpleCoordinate>();
+    this.currentPositionSubject.next({lat: 0, lng: 0});
+    this.currentPosition$ = this.currentPositionSubject.asObservable();
 
   }
 
   getRxCurrentPosition(): Observable<ILocation.ISimpleCoordinate> {
+    // return this.currentPositionSubject;
     return this.currentPosition$;
-    // return this.currentPositionSource;
   }
 
   setMapCenterAndZoom(lat: number, lng: number, zoom: number) {
@@ -85,12 +85,12 @@ export class GoogleMapModelService {
       if (this.markerArray.length > 0) {
         this.updateMarkers(this.markerArray);
       }
+      // initial call for googlemap center
+      this.currentPositionSubject.next(this.getCenterCoordinates());
       // function listener
       let handleCoordinate = (): void => {
         let latLng: google.maps.LatLng = this.googleMapObj.getCenter();
-        this.currentPositionSource.next({lat: latLng.lat(), lng: latLng.lng()});
-        // console.log({lat: latLng.lat(), lng: latLng.lng()});
-        // console.log(this);
+        this.currentPositionSubject.next(this.getCenterCoordinates());
       };
       // listener for current position on the map and push it to stream
       this.googleMapObj.addListener('drag', handleCoordinate);
@@ -98,5 +98,10 @@ export class GoogleMapModelService {
       console.error(err);
       alert('Cann\'t load google map!');
     });
+  }
+
+  private getCenterCoordinates(): ILocation.ISimpleCoordinate {
+    let latLng: google.maps.LatLng = this.googleMapObj.getCenter();
+    return  {lat: latLng.lat(), lng: latLng.lng()};
   }
 }
