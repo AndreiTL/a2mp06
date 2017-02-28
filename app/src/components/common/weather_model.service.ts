@@ -18,10 +18,6 @@ export class WeatherModelService {
   typeRequest: string = 'GET';
   async: boolean = true;
 
-  latitude: number = 0;
-  longitude: number = 0;
-  count: number = 1;
-
   lastUpdateTime: number;
 
   private townsWeather: Weather.ITownWeather[];
@@ -66,9 +62,7 @@ export class WeatherModelService {
       }
     )
   }
-  addTownByName(id: number): void {
 
-  }
   removeTown(id: number): void {
     let indexRemove: number = this.townsWeather.findIndex((value: Weather.ITownWeather) => {
       console.log(value.id + ' ' + (value.id === id));
@@ -87,48 +81,15 @@ export class WeatherModelService {
         this.promiseLoadHandlerResolve,
         this.promiseLoadHandlerReject
       );
-    // let lastUpdateTimeString: string = this.storageService.getData('lastUpdateTime');
-    // if (!lastUpdateTimeString) {
-    //   // case: first load
-    //   console.log('Nothing in storage. Load from internet.');
-    //   this.townsWeather = [];
-    //   this.initLoadInCircle(options).then(
-    //     this.promiseLoadHandlerResolve,
-    //     this.promiseLoadHandlerReject
-    //   );
-    // } else {
-    //   // in milliseconds
-    //   this.lastUpdateTime = parseInt(lastUpdateTimeString, 10);
-    //   if ((this.lastUpdateTime > (Date.now() - this.maxTimeValide))) {
-    //     // case: in storage are valid data then load from storage
-    //     console.log('Valid in storage. Load from storage.');
-    //     let townsString = this.storageService.getData('townsweather');
-    //     this.townsWeather.push(...<Weather.ITownWeather[]>JSON.parse(townsString));
-    //     this.subjectTownsWeather.next(this.townsWeather);
-    //   } else {
-    //     // case: in storage are expired data then load from internet
-    //     console.log('Expired or invalid in storage. Load from internet.');
-    //     this.townsWeather = [];
-    //     this.initLoadInCircle(options).then(
-    //       this.promiseLoadHandlerResolve,
-    //       this.promiseLoadHandlerReject
-    //     );
-    //   }
-    // }
   }
 
   // load clean new weather towns list
   loadWeatherInCircle(options: Weather.IWeatherParams): void {
     this.townsWeather = [];
-    // this.addNearestTowns(options);
     let lastUpdateTimeString: string = this.storageService.getData('lastUpdateTime');
     if (!lastUpdateTimeString) {
       // case: first load
       console.log('Nothing in storage. Load from internet.');
-      // this.initLoadInCircle(options).then(
-      //   this.promiseLoadHandlerResolve,
-      //   this.promiseLoadHandlerReject
-      // );
       this.addNearestTowns(options);
     } else {
       // in milliseconds
@@ -142,10 +103,6 @@ export class WeatherModelService {
       } else {
         // case: in storage are expired data then load from internet
         console.log('Expired or invalid in storage. Load from internet.');
-        // this.initLoadInCircle(options).then(
-        //   this.promiseLoadHandlerResolve,
-        //   this.promiseLoadHandlerReject
-        // );
         this.addNearestTowns(options);
       }
     }
@@ -158,10 +115,6 @@ export class WeatherModelService {
   getLastUpdateTime(): number {
     return parseInt(this.storageService.getData('lastUpdateTime'), 10);
   }
-
-  // getTownsWeather(): Weather.ITownWeather[] {
-  //   return this.weatherObject.list;
-  // }
 
   loadWeatherByIds(ids: number[]): Promise<Weather.IWeatherObject> {
     return new Promise((resolve, reject): void => {
@@ -216,27 +169,15 @@ export class WeatherModelService {
           this.weatherObject = weather;
           // and when weather.cod===200
           if (weather && weather.list && weather.list.length > 0) {
-            // this.storageService.setData('lastUpdateTime', JSON.stringify(this.lastUpdateTime));
-            // this.storageService.setData('townsweather', JSON.stringify(this.weatherObject.list));
-            // this.storageService.setData('params', JSON.stringify({
-            //   longitude: options.longitude,
-            //   latitude: options.latitude,
-            //   count: options.count})
-            // );
-            // this.townsWeather = weather.list;
-            // this.subjectTownsWeather.next(this.townsWeather);
             resolve(weather.list);
           } else {
-            // this.subjectTownsWeather.error('Cann\'t load data from server');
             reject('Cann\'t load data from server');
           }
         },
         () => {
-          // this.subjectTownsWeather.error('Cann\'t load data from server');
           reject('Cann\'t load data from server');
         });
     })
-
   }
 
   // to deliver changes to other components

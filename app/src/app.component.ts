@@ -38,7 +38,4 @@ export class AppComponent  {
     });
   }
 
-  // updateLastTime(time: number): void {
-  //
-  // }
 }

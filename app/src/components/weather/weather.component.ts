@@ -17,8 +17,6 @@ export class WeatherComponent {
 
   townsWeatherObserver: () => Observer<Weather.ITownWeather[]>;
 
-  weatherObject: Weather.IWeatherObject;
-
   isLoading: boolean = true;
   isLoadingFavorite: boolean = true;
   townsTable: Weather.ITownWeather[] ;
@@ -142,8 +140,4 @@ export class WeatherComponent {
     );
   }
 
-  private updateTableList() {
-    this.isLoading = false;
-    this.cd.detectChanges();
-  }
 }

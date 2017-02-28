@@ -4,7 +4,6 @@ export class MarkersService {
   processMarkers(array: Weather.ITownWeather[]): NGoogleMapService.IMarkerPoint[] {
     let sampleArray: NGoogleMapService.IMarkerPoint[] = [];
     array.forEach((value) => {
-      // townTableTemp = context.townTableTemp.concat(context.generateTableRow(value));
       sampleArray.push({
         lng: value.coord.lon,
         lat: value.coord.lat,
