@@ -7,6 +7,7 @@ import {WeatherModelService} from '../common/weather_model.service';
 import {MarkersService} from '../common/markers.service';
 
 import {template} from './googlemap.tpl';
+import {SubscribableOrPromise} from "rxjs/Observable";
 
 @Component({
   selector: 'googlemap',
@@ -79,7 +80,25 @@ export class GooglemapComponent {
         console.log('comlete thread position of googlemap');
       }
     }};
-    this.googlemapPositionSource.subscribe(this.googleMapPositionObserver());
+
+    // let openings = Observable.interval(200);
+    // RX.jx query
+    this.googlemapPositionSource
+      .map( (value: ILocation.ISimpleCoordinate) => {
+        let newValue: ILocation.ISimpleCoordinate = {
+          lat: Math.round(value.lat * 10000) / 10000,
+          lng: Math.round(value.lng * 10000) / 10000
+        };
+        return newValue
+      })
+      // .window( openings, (value: Observable<ILocation.ISimpleCoordinate>) => {
+      //   return value;
+      // })
+      // .merge()
+      .debounce( () => {
+        return Observable.timer(100);
+      } )
+      .subscribe(this.googleMapPositionObserver());
   }
 
   ngAfterContentInit() {
